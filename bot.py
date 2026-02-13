@@ -50,14 +50,14 @@ WAITING_FOR_FILE = 1
 
 # All study group members
 MEMBERS = [
-    1387393147,    # Vamsee (ADMIN)
-    8095569186,    # Umesh (ADMIN) 
-    6931175630,    # Chetan
-    6544711761,    # Yashwanth
-    5477604530,    # Karthik
-    6643208192,    # Sanjith (ADMIN)
-    5801384729,    # Raghunandan
-    103419413,    # Pavan
+    (1387393147, "Vamsee"),    # ADMIN
+    (8095569186, "Umesh"),     # ADMIN 
+    (6931175630, "Chetan"),
+    (6544711761, "Yashwanth"),
+    (5477604530, "Karthik"),
+    (6643208192, "Sanjith"),   # ADMIN
+    (5801384729, "Raghunandan"),
+    (103419413, "Pavan"),
 ]
 
 # Admin user IDs (excluded from mentions when they use /tagall)
@@ -143,30 +143,34 @@ async def is_admin(update: Update) -> bool:
         return False
 
 def get_member_count() -> int:
-    """Get total number of registered members."""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM members")
-        count = cursor.fetchone()[0]
-        conn.close()
-        return count
-    except Exception as e:
-        print(f"Error getting member count: {e}")
-        return 0
+    """Get total number of registered members (DB + Hardcoded)."""
+    return len(get_all_member_ids())
 
 def get_all_member_ids() -> list:
-    """Get list of all registered member user IDs."""
+    """Get list of all registered member user IDs (DB + Hardcoded)."""
+    members_set = {}
+    
+    # 1. Add hardcoded members first
+    for user_id, name in MEMBERS:
+        members_set[user_id] = name
+        
+    # 2. Add/Override with DB members (might have updated names)
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute("SELECT user_id, first_name FROM members")
-        members = cursor.fetchall()
+        db_members = cursor.fetchall()
+        
+        for user_id, first_name in db_members:
+            members_set[user_id] = first_name
+            
         conn.close()
-        return members
     except Exception as e:
-        print(f"Error getting member IDs: {e}")
-        return []
+        print(f"Error getting member IDs from DB: {e}")
+        # Continue with just hardcoded members if DB fails
+        
+    # Convert back to list of tuples
+    return list(members_set.items())
 
 def get_deadline_count() -> int:
     """Get total number of deadlines posted."""
