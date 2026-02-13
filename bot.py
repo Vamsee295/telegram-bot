@@ -57,7 +57,9 @@ MEMBERS = [
     (5477604530, "Karthik"),
     (6643208192, "Sanjith"),   # ADMIN
     (5801384729, "Raghunandan"),
-    (103419413, "Pavan"),
+    (1034194135, "Pavan"),
+    (6338700492, "Ganesh"),
+    (6530388705, "Bhargav"),
 ]
 
 # Admin user IDs (excluded from mentions when they use /tagall)
@@ -315,6 +317,10 @@ async def mention_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     failed_count = 0
     
     for user_id, first_name in members:
+        # Exclude the sender (admin) from mentions
+        if user_id == update.effective_user.id:
+            continue
+            
         try:
             # Use tg://user format for real mentions
             mention_text += f"[{first_name}](tg://user?id={user_id}) "
